@@ -11,8 +11,20 @@ import ps5 from '../assets/videogames/ps5.webp';
 import Image from "next/image";
 
 import 'keen-slider/keen-slider.min.css';
+import { stripe } from "@/lib/stripe";
+import { GetServerSideProps } from "next";
 
-export default function Home() {
+interface HomeProps {
+  products: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    price: number;
+  }[]
+}
+
+export default function Home({products}: HomeProps) {
+
   const [sliderRef] = useKeenSlider({
     slides: {
       perView: 3,
@@ -22,41 +34,41 @@ export default function Home() {
 
   return (
     <HomeContainer ref={sliderRef} className="keen-slider">
-      <Product className="keen-slider__slide">
-        <Image src={ps5} width={520} height={480} alt="" />
+      {products.map(product => {
+        return (
+      <Product key={product.id} className="keen-slider__slide">
+        <Image src={product.imageUrl} width={520} height={480} alt="" />
 
         <footer>
-          <strong>Playstation 5</strong>
-          <span>R$ 4.999,00</span>
+          <strong>{product.name}</strong>
+          <span>R$ {product.price}</span>
         </footer>
       </Product>
-
-      <Product className="keen-slider__slide">
-        <Image src={ps5} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>Playstation 5</strong>
-          <span>R$ 4.999,00</span>
-        </footer>
-      </Product>
-
-      <Product className="keen-slider__slide">
-        <Image src={ps5} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>Playstation 5</strong>
-          <span>R$ 4.999,00</span>
-        </footer>
-      </Product>
-
-      <Product className="keen-slider__slide">
-        <Image src={ps5} width={520} height={480} alt="" />
-
-        <footer>
-          <strong>Playstation 5</strong>
-          <span>R$ 4.999,00</span>
-        </footer>
-      </Product>
+        )
+      })}
       </HomeContainer>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const response = await stripe.products.list({
+    expand: ['data.default_price']
+  })
+
+  const products = response.data.map(product => {
+    const price = product.default_price as Stripe.Price
+
+    return {
+      id: product.id,
+      name: product.name,
+      imageUrl: product.images[0],
+      price: price.unit_amount / 100,
+    }
+  })
+
+  return {
+    props: {
+      products
+    }
+  }
 }
