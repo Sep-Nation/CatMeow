@@ -13,6 +13,7 @@ export const {
   theme: {
     colors: {
       rocketseat: '#8257e6',
+      white: 'white',
 
       gray900: '#121214',
       gray800: '#202024',
